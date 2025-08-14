@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shazam-for-code
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shazam
+  template:
+    metadata:
+      labels:
+        app: shazam
+    spec:
+      containers:
+        - name: shazam
+          image: ghcr.io/yourorg/shazam-for-code:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: token
