@@ -1,4 +1,4 @@
-module github.com/rohanair/shazam-for-code
+module new implementation
 
 go 1.22
 

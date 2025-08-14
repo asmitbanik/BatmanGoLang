@@ -1,0 +1,6 @@
+body { margin: 0; font-family: Inter, Arial, sans-serif; background:#f6f7fb; }
+.app { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.controls { margin-bottom: 12px; display:flex; gap:8px; align-items:center; }
+.result { background: white; padding: 12px; border-radius:8px; box-shadow: 0 1px 3px rgba(0,0,0,.06);}
+.editor { height: 480px; border-radius:8px; overflow:hidden; }

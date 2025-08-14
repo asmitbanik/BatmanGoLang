@@ -3,16 +3,14 @@ package internal
 import (
     "bytes"
     "strings"
-
-    enry "github.com/src-d/enry/v2"
+    "log"
 )
 
-// DetectLanguage guesses language using enry
+enry "github.com/src-d/enry/v2"
+
 func DetectLanguage(filename string, content []byte) string {
-    // enry expects filename and content
     lang := enry.GetLanguage(filename, content)
     if lang == "" || lang == "Unknown" {
-        // fallback to content-based heuristics
         txt := strings.ToLower(string(bytes.TrimSpace(content)))
         if strings.HasPrefix(txt, "<") {
             return "HTML"
@@ -24,32 +22,27 @@ func DetectLanguage(filename string, content []byte) string {
     return lang
 }
 
-// DetectFramework looks for heuristics in the source
-func DetectFramework(code string, lang string) string {
-    lower := strings.ToLower(code)
-    switch lang {
-    case "JavaScript", "TypeScript":
-        if strings.Contains(lower, "react") || strings.Contains(lower, "from 'react'") || strings.Contains(lower, "from \"react\"") {
-            return "React"
+func DetectFramework(code string) string {
+    if fw, score, err := DetectFrameworkML(code); err == nil {
+        if score > -1000 {
+            log.Printf("ML framework detection: %s (score %.2f)\n", fw, score)
+            return fw
         }
-        if strings.Contains(lower, "@angular") || strings.Contains(lower, "angular.module") {
-            return "Angular"
-        }
-    case "Python":
-        if strings.Contains(lower, "django") {
-            return "Django"
-        }
-        if strings.Contains(lower, "flask") {
-            return "Flask"
-        }
-    case "Go":
-        if strings.Contains(lower, "github.com/gin-gonic/gin") || strings.Contains(lower, "gin") && strings.Contains(lower, "router") {
-            return "Gin"
-        }
-    case "Java":
-        if strings.Contains(lower, "springframework") {
-            return "Spring"
-        }
+    } else {
+        log.Println("ML detection error:", err)
+    }
+    lowerCode := strings.ToLower(code)
+    if strings.Contains(lowerCode, "import react") || strings.Contains(lowerCode, "useeffect(") || strings.Contains(lowerCode, "usestate(") {
+        return "React"
+    }
+    if strings.Contains(lowerCode, "github.com/gin-gonic/gin") || strings.Contains(lowerCode, "gin.") {
+        return "Gin (Go)"
+    }
+    if strings.Contains(lowerCode, "django") {
+        return "Django"
+    }
+    if strings.Contains(lowerCode, "from flask") || strings.Contains(lowerCode, "flask import") {
+        return "Flask"
     }
     return "Unknown"
 }

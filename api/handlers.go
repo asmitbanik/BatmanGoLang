@@ -8,18 +8,12 @@ import (
     "github.com/gin-gonic/gin"
     "go.uber.org/zap"
 
-    // "github.com/rohanair/shazam-for-code/internal"
+    "new implementation/internal"
 )
 
 type analyzeRequest struct {
     Filename string `json:"filename" binding:"required"`
     Code     string `json:"code" binding:"required"`
-}
-
-type analyzeResponse struct {
-    Language string   `json:"language"`
-    Framework string  `json:"framework"`
-    SimilarRepos []string `json:"similar_repos"`
 }
 
 func RegisterRoutes(r *gin.Engine, gh *internal.GitHubClient) {
@@ -33,25 +27,22 @@ func makeAnalyzeHandler(gh *internal.GitHubClient, logger *zap.Logger) gin.Handl
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
             return
         }
-
-        // Detect language & framework
         lang := internal.DetectLanguage(req.Filename, []byte(req.Code))
-        framework := internal.DetectFramework(req.Code, lang)
-
-        // Call GitHub search with timeout
+        framework, mlScore, _ := internal.DetectFrameworkML(req.Code)
+        if framework == "" || framework == "Unknown" {
+            framework = internal.DetectFramework(req.Code)
+        }
         ctx, cancel := context.WithTimeout(c.Request.Context(), 8*time.Second)
         defer cancel()
         repos, err := gh.SearchCode(ctx, req.Code)
         if err != nil {
             logger.Sugar().Warnw("github search failed", "err", err)
-            // continue and return other info
         }
-
-        res := analyzeResponse{
-            Language: lang,
-            Framework: framework,
-            SimilarRepos: repos,
-        }
-        c.JSON(http.StatusOK, res)
+        c.JSON(http.StatusOK, gin.H{
+            "language":      lang,
+            "framework":     framework,
+            "ml_score":      mlScore,
+            "similar_repos": repos,
+        })
     }
 }
