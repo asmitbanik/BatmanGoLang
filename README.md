@@ -1,32 +1,49 @@
-# Shazam for Code — Final Implementation
+# Shazam for Code
 
-## Objective
-Upload any code snippet → Detect programming language, framework (ML-based), and related GitHub repos.
+> Upload any code snippet → Detect programming language, framework, and related GitHub repos
 
-## Structure
-- `main.go` — Entry point, server setup
-- `api/handlers.go` — API endpoint for `/analyze`
-- `internal/` — Core logic: language/framework detection, ML, GitHub search, caching, logging, middleware
-- `config/` — Config loader
-- `frontend/` — React + Vite frontend (Monaco editor, API integration)
+## Features
+- Paste or upload any code snippet
+- Detects programming language (using enry)
+- Detects framework (ML-based + keyword/regex)
+- Finds similar code on GitHub and returns related repositories
+- Fast, modern React frontend (Vite)
 
-## How to Run
+## Project Structure
+- `main.go` — Go backend (Gin API)
+- `internal/` — Core logic (detection, ML, GitHub, cache, etc.)
+- `frontend/` — React (Vite) frontend
+
+## Getting Started
+
+### Prerequisites
+- Go 1.20+
+- Node.js 18+ (for frontend)
+- Redis (optional, for caching)
+- GitHub API token (recommended, for higher rate limits)
 
 ### Backend
-1. `cd "new implementation"`
-2. `go mod tidy`
-3. `go run main.go`
+```sh
+go mod tidy
+export GITHUB_TOKEN=your_token_here
+go run main.go
+```
 
 ### Frontend
-1. `cd frontend`
-2. `npm install`
-3. `npm run dev`
+```sh
+cd frontend
+npm install # or bun install
+npm run dev # or bun run dev
+```
 
 ### Usage
-- Open `http://localhost:3000` in your browser
-- Paste/upload code, set filename, click Analyze
-- See detected language, framework, and similar GitHub repos
+1. Open the frontend in your browser (default: http://localhost:5173)
+2. Paste or upload code, enter filename, click Analyze
+3. See detected language, framework, and similar GitHub repos
 
----
+## Environment Variables
+- `GITHUB_TOKEN` — GitHub API token (required for production)
+- `REDIS_ADDR` — Redis address (default: localhost:6379)
 
-This folder contains only the final, non-duplicated, production-ready implementation for the Shazam for Code objective.
+## License
+MIT

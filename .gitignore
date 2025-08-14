@@ -1,0 +1,36 @@
+# Go
+bin/
+*.exe
+*.test
+*.out
+*.log
+*.swp
+*.tmp
+coverage*
+framework_model.gob
+
+# Dependency directories
+vendor/
+
+# IDE/editor
+.vscode/
+.idea/
+*.code-workspace
+*.sublime*
+*.DS_Store
+node_modules/
+
+# Frontend build
+frontend/dist/
+frontend/.env*
+frontend/.next/
+frontend/.cache/
+frontend/.turbo/
+
+# OS
+Thumbs.db
+ehthumbs.db
+*.bak
+*.old
+*.orig
+*.rej
