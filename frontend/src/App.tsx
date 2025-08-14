@@ -1,12 +1,15 @@
 
+
 import React, { useState } from 'react'
 import CodeEditor from './components/CodeEditor'
 import { analyzeCode } from './api'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { InstantSearch } from './InstantSearch'
 
 const LANGUAGES = [
   'auto', 'go', 'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'rust', 'ruby', 'php', 'csharp', 'kotlin', 'swift', 'scala', 'html', 'css', 'json', 'bash', 'r', 'dart', 'elixir', 'haskell', 'perl', 'lua', 'matlab', 'objective-c', 'sql', 'xml', 'yaml', 'powershell', 'shell', 'assembly', 'fortran', 'groovy', 'julia', 'lisp', 'prolog', 'scheme', 'visualbasic', 'verilog', 'vhdl', 'coffeescript', 'fsharp', 'ocaml', 'clojure', 'erlang', 'elm', 'nim', 'crystal', 'reason', 'vala', 'zig', 'solidity', 'graphql', 'dockerfile', 'makefile', 'cmake', 'ini', 'toml', 'protobuf', 'tsx', 'jsx'
 ]
+
 
 function App() {
   const [code, setCode] = useState<string>('package main\n\nimport "fmt"\n\nfunc main() {\n  fmt.Println("Hello, world")\n}\n')
@@ -15,6 +18,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   async function handleAnalyze() {
     setError(null)
@@ -30,13 +34,25 @@ function App() {
     }
   }
 
+
   return (
     <div className="app">
       <div className="header">
-        <h2>Shazam for Code — Live Editor</h2>
-        <div>Backend: <strong>POST /analyze</strong></div>
+        <div>
+          <h2>Shazam for Code — Live Editor</h2>
+          <div>Backend: <strong>POST /analyze</strong></div>
+        </div>
+        <div style={{minWidth:320}}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Instant codebase search (grep.app style)"
+            style={{padding:8, width:'100%', borderRadius:4, border:'1px solid #ccc'}}
+          />
+          <InstantSearch query={searchQuery} />
+        </div>
       </div>
-
 
       <div className="controls" style={{display:'flex',gap:8,alignItems:'center'}}>
         <input value={filename} onChange={(e) => setFilename(e.target.value)} style={{padding:8}} placeholder="Filename (optional)" />
@@ -48,7 +64,7 @@ function App() {
         </button>
       </div>
 
-  <CodeEditor code={code} setCode={setCode} language={selectedLang === 'auto' ? undefined : selectedLang} />
+      <CodeEditor code={code} setCode={setCode} language={selectedLang === 'auto' ? undefined : selectedLang} />
 
       <div style={{height: 16}} />
 

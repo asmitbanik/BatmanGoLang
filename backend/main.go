@@ -20,7 +20,6 @@ func init() {
     _ = godotenv.Load()
 }
 
-
 func main() {
     cfg := config.LoadConfig()
     internal.InitOrLoadModel()
@@ -31,19 +30,6 @@ func main() {
         logger.Sugar().Warnw("redis disabled, falling back to in-memory cache", "error", err)
     }
     gh := internal.NewGitHubClient(cfg.GitHubToken, cacheClient, logger)
-
-    // --- Begin: Instant Search Index Worker Setup ---
-    importSearch "d:/Asmit/shazamCode/internal/search"
-    ngramIdx, err := search.NewNGramIndex("data/ngram_index", 3)
-    if err != nil {
-        log.Fatalf("failed to open ngram index: %v", err)
-    }
-    // TODO: Load repo list from config or env
-    repos := []string{"/path/to/repo1", "/path/to/repo2"} // Replace with real repo paths
-    worker := search.NewIndexWorker(repos, ngramIdx, 10*time.Minute)
-    worker.Start()
-    // --- End: Instant Search Index Worker Setup ---
-
     r := gin.New()
     r.Use(internal.GinZap(logger))
     r.Use(gin.Recovery())
