@@ -8,10 +8,11 @@
     "preview": "vite preview --port 5173"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
     "axios": "^1.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-monaco-editor": "^0.44.0",
+    "react-monaco-editor": "^0.59.0",
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
