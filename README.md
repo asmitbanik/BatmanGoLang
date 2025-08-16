@@ -1,3 +1,4 @@
+
 # Shazam for Code
 
 > Upload any code snippet → Detect programming language, framework, and related GitHub repos
@@ -11,29 +12,39 @@
 
 ## Project Structure
 - `main.go` — Go backend (Gin API)
-- `internal/` — Core logic (detection, ML, GitHub, cache, etc.)
+- `api/` — API endpoint handlers
+- `config/` — Configuration logic
+- `internal/` — Core backend logic (detection, ML, GitHub, cache, etc.)
 - `frontend/` — React (Vite) frontend
+
+### Documentation
+Each folder contains a `docs/` directory with simple documentation for every file. See, for example:
+- `backend/docs/` — Backend entrypoint docs
+- `backend/api/docs/` — API handler docs
+- `backend/internal/docs/` — Core backend logic docs
+- `frontend/docs/` — Frontend config/docs
+- `frontend/src/docs/` — Frontend source file docs
 
 ## Getting Started
 
 ### Prerequisites
 - Go 1.20+
-- Node.js 18+ (for frontend)
+- Bun or Node.js 18+ (for frontend)
 - Redis (optional, for caching)
 - GitHub API token (recommended, for higher rate limits)
 
 ### Backend
 ```sh
 go mod tidy
-export GITHUB_TOKEN=your_token_here
+$env:GITHUB_TOKEN="your_token_here" # PowerShell
 go run main.go
 ```
 
 ### Frontend
 ```sh
 cd frontend
-npm install # or bun install
-npm run dev # or bun run dev
+bun install # or npm install
+bun run dev # or npm run dev
 ```
 
 ### Usage
