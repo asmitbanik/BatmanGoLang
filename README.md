@@ -1,4 +1,5 @@
 
+# <img src="frontend/public/logo.svg" alt="BatmanGoLang Logo" width="64" height="64" style="vertical-align:middle;">  
 # Batman GoLang Code Intelligence Platform
 
 > Instantly analyze, search, and understand code across your entire codebase with blazing speed and modern UX.
