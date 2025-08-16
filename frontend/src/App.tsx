@@ -1,6 +1,5 @@
-
-
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import CodeEditor from './components/CodeEditor'
 import { analyzeCode } from './api'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -10,6 +9,27 @@ const LANGUAGES = [
   'auto', 'go', 'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'rust', 'ruby', 'php', 'csharp', 'kotlin', 'swift', 'scala', 'html', 'css', 'json', 'bash', 'r', 'dart', 'elixir', 'haskell', 'perl', 'lua', 'matlab', 'objective-c', 'sql', 'xml', 'yaml', 'powershell', 'shell', 'assembly', 'fortran', 'groovy', 'julia', 'lisp', 'prolog', 'scheme', 'visualbasic', 'verilog', 'vhdl', 'coffeescript', 'fsharp', 'ocaml', 'clojure', 'erlang', 'elm', 'nim', 'crystal', 'reason', 'vala', 'zig', 'solidity', 'graphql', 'dockerfile', 'makefile', 'cmake', 'ini', 'toml', 'protobuf', 'tsx', 'jsx'
 ]
 
+
+function GlobalCodeSearchButton() {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate('/search')}
+      style={{
+        padding: '10px 18px',
+        fontSize: 16,
+        borderRadius: 8,
+        background: '#0070f3',
+        color: '#fff',
+        border: 'none',
+        cursor: 'pointer',
+        fontWeight: 500
+      }}
+    >
+      Global Code Search
+    </button>
+  );
+}
 
 function App() {
   const [code, setCode] = useState<string>('package main\n\nimport "fmt"\n\nfunc main() {\n  fmt.Println("Hello, world")\n}\n')
@@ -39,18 +59,11 @@ function App() {
     <div className="app">
       <div className="header">
         <div>
-          <h2>Shazam for Code — Live Editor</h2>
+          <h2>Batman GoLang — Live Editor</h2>
           <div>Backend: <strong>POST /analyze</strong></div>
         </div>
-        <div style={{minWidth:320}}>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Instant codebase search (grep.app style)"
-            style={{padding:8, width:'100%', borderRadius:4, border:'1px solid #ccc'}}
-          />
-          <InstantSearch query={searchQuery} />
+        <div style={{minWidth:320, display:'flex', justifyContent:'flex-end', alignItems:'center', height:'100%'}}>
+          <GlobalCodeSearchButton />
         </div>
       </div>
 

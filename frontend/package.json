@@ -1,5 +1,6 @@
 {
-  "name": "shazam-frontend",
+  "type": "module",
+  "name": "batman-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,14 +11,15 @@
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",
     "axios": "^1.4.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-monaco-editor": "^0.59.0",
+    "react-router-dom": "^7.8.1",
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.10",
-    "@types/react-dom": "^18.2.4",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.7",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   }

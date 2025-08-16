@@ -1,5 +1,5 @@
 
-# Shazam for Code
+# Batman for Code
 
 > Upload any code snippet → Detect programming language, framework, and related GitHub repos
 
