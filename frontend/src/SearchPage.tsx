@@ -1,30 +1,43 @@
 import React, { useState, useRef, useEffect } from 'react';
+// Needed for JSX.Element type
+import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
 type CodeSearchResult = {
-  filename: string;
   repo: string;
-  line: number;
-  snippet: string;
-  url: string;
+  path: string;
+  language?: string;
+  line: string;
+  lineNumber: number;
+  matchRanges: [number, number][];
 };
 
-// Dummy search function (replace with real backend call)
-async function searchCode(query: string, source: string): Promise<CodeSearchResult[]> {
-  // source: 'github' | 'local'
-  // TODO: Call your backend endpoint with ?q=query&source=github|local
-  // Return format: [{ filename, repo, line, snippet, url }]
-  return [];
+async function searchCode(query: string, source: string, filters: {repo?: string, language?: string, path?: string} = {}, limit = 20, offset = 0): Promise<{results: CodeSearchResult[], totalCount: number, hasMore: boolean}> {
+  if (!query || query.length < 3) return {results: [], totalCount: 0, hasMore: false};
+  if (source === 'github') {
+    // TODO: Implement GitHub search integration
+    return {results: [], totalCount: 0, hasMore: false};
+  }
+  const params: any = { q: query, limit, offset };
+  if (filters.repo) params.repo = filters.repo;
+  if (filters.language) params.language = filters.language;
+  if (filters.path) params.path = filters.path;
+  const res = await fetch(`/search?${new URLSearchParams(params).toString()}`);
+  if (!res.ok) throw new Error('Search failed');
+  return await res.json();
 }
 
 export default function CodeSearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CodeSearchResult[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [source, setSource] = useState<'github' | 'local'>('github');
+  const [source, setSource] = useState<'github' | 'local'>('local');
   const inputRef = useRef<HTMLInputElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -40,8 +53,10 @@ export default function CodeSearchPage() {
     setError(null);
     const timeout = setTimeout(async () => {
       try {
-        const res = await searchCode(query, source);
+        const {results: res, totalCount, hasMore} = await searchCode(query, source);
         setResults(res || []);
+        setTotalCount(totalCount);
+        setHasMore(hasMore);
         setShowPopup(true);
       } catch (e) {
         setError('Search failed');
@@ -64,7 +79,8 @@ export default function CodeSearchPage() {
         e.preventDefault();
       } else if (e.key === 'Enter') {
         if (results[selectedIndex]) {
-          window.open(results[selectedIndex].url, '_blank');
+          const r = results[selectedIndex];
+          window.open(`#file=${encodeURIComponent(r.path)}&line=${r.lineNumber}`, '_blank');
         }
       } else if (e.key === 'Escape') {
         setShowPopup(false);
@@ -144,20 +160,20 @@ export default function CodeSearchPage() {
             )}
             {results.map((r, i) => (
               <div
-                key={r.url}
+                key={r.repo + r.path + r.lineNumber}
                 style={{
                   padding: '12px 16px',
                   background: i === selectedIndex ? '#f5f7fa' : undefined,
                   cursor: 'pointer'
                 }}
                 onMouseEnter={() => setSelectedIndex(i)}
-                onClick={() => window.open(r.url, '_blank')}
+                onClick={() => window.open(`#file=${encodeURIComponent(r.path)}&line=${r.lineNumber}`, '_blank')}
               >
                 <div style={{ fontSize: 14, color: '#555' }}>
-                  <strong>{r.filename}</strong> in <span style={{ color: '#888' }}>{r.repo}</span> — line {r.line}
+                  <strong>{r.path.split('/').pop()}</strong> in <span style={{ color: '#888' }}>{r.repo}</span> — line {r.lineNumber}
                 </div>
                 <pre style={{ margin: '4px 0 0 0', fontSize: 13, background: 'none', whiteSpace: 'pre-wrap' }}>
-                  {highlightMatch(r.snippet, query)}
+                  {highlightMatch(r.line, query, r.matchRanges)}
                 </pre>
               </div>
             ))}
@@ -168,14 +184,15 @@ export default function CodeSearchPage() {
   );
 }
 
-function highlightMatch(text: string, query: string) {
-  if (!query) return text;
-  const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
-  const parts = text.split(regex);
-  return parts.map((part, i) =>
-    regex.test(part) ? <mark key={i} style={{ background: '#ffe066' }}>{part}</mark> : part
-  );
-}
-function escapeRegExp(string: string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function highlightMatch(text: string, query: string, matchRanges?: [number, number][]) {
+  if (!query || !matchRanges || matchRanges.length === 0) return text;
+  const out: (string | ReactElement)[] = [];
+  let last = 0;
+  matchRanges.forEach(([start, end], i) => {
+    if (start > last) out.push(text.slice(last, start));
+    out.push(<mark key={i} style={{ background: '#ffe066' }}>{text.slice(start, end)}</mark>);
+    last = end;
+  });
+  if (last < text.length) out.push(text.slice(last));
+  return out;
 }

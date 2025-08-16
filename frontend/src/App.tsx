@@ -58,9 +58,11 @@ function App() {
   return (
     <div className="app">
       <div className="header">
-        <div>
-          <h2>Batman GoLang — Live Editor</h2>
-          <div>Backend: <strong>POST /analyze</strong></div>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <img src="/logo.svg" alt="Logo" style={{height:40, width:40}} />
+          <div>
+            <h2 style={{margin:0}}>Batman GoLang — Live Editor</h2>
+          </div>
         </div>
         <div style={{minWidth:320, display:'flex', justifyContent:'flex-end', alignItems:'center', height:'100%'}}>
           <GlobalCodeSearchButton />
