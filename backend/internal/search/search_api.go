@@ -20,85 +20,36 @@ type SearchMatch struct {
 	MatchRanges [][2]int `json:"matchRanges"` // [start,end) byte offsets in line
 }
 
-func SearchAPIHandler(idx *NGramIndex) http.HandlerFunc {
+func SearchAPIHandler(idx Searcher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query().Get("q")
-		if len(query) < idx.n {
+		if len(query) < 3 {
 			http.Error(w, "query too short", http.StatusBadRequest)
 			return
 		}
-		caseSensitive := r.URL.Query().Get("case") == "1"
-		useRegex := r.URL.Query().Get("regex") == "1"
-
-		var re *regexp.Regexp
-		var err error
-		if useRegex {
-			re, err = regexp.Compile(query)
-			if err != nil {
-				http.Error(w, "invalid regex: "+err.Error(), http.StatusBadRequest)
-				return
-			}
+		filters := SearchFilters{
+			Repo:     r.URL.Query().Get("repo"),
+			Language: r.URL.Query().Get("language"),
+			Path:     r.URL.Query().Get("path"),
 		}
-
-		candidates, err := idx.SearchNGram(query)
+		limit := 20
+		offset := 0
+		if l := r.URL.Query().Get("limit"); l != "" {
+			fmt.Sscanf(l, "%d", &limit)
+		}
+		if o := r.URL.Query().Get("offset"); o != "" {
+			fmt.Sscanf(o, "%d", &offset)
+		}
+		results, total, err := idx.Search(query, filters, limit, offset)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		var results []SearchMatch
-		for _, meta := range candidates {
-			absPath := meta.Path
-			// If Path is not absolute, try to resolve (customize as needed)
-			if !filepath.IsAbs(absPath) {
-				absPath, _ = filepath.Abs(absPath)
-			}
-			f, err := os.Open(absPath)
-			if err != nil {
-				continue
-			}
-			scanner := bufio.NewScanner(f)
-			lineNum := 0
-			for scanner.Scan() {
-				line := scanner.Text()
-				lineNum++
-				var matchRanges [][2]int
-				if useRegex && re != nil {
-					locs := re.FindAllStringIndex(line, -1)
-					for _, loc := range locs {
-						matchRanges = append(matchRanges, [2]int{loc[0], loc[1]})
-					}
-				} else {
-					// Substring search (case-insensitive by default)
-					hay := line
-					needle := query
-					if !caseSensitive {
-						hay = strings.ToLower(line)
-						needle = strings.ToLower(query)
-					}
-					idx := 0
-					for {
-						i := strings.Index(hay[idx:], needle)
-						if i == -1 {
-							break
-						}
-						matchRanges = append(matchRanges, [2]int{idx + i, idx + i + len(needle)})
-						idx += i + len(needle)
-					}
-				}
-				if len(matchRanges) > 0 {
-					results = append(results, SearchMatch{
-						Repo: meta.Repo,
-						Path: meta.Path,
-						Language: meta.Language,
-						Line: line,
-						LineNumber: lineNum,
-						MatchRanges: matchRanges,
-					})
-				}
-			}
-			f.Close()
-		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(results)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"results": results,
+			"totalCount": total,
+			"hasMore": offset+limit < total,
+		})
 	}
 }

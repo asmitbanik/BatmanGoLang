@@ -30,11 +30,18 @@ func main() {
         logger.Sugar().Warnw("redis disabled, falling back to in-memory cache", "error", err)
     }
     gh := internal.NewGitHubClient(cfg.GitHubToken, cacheClient, logger)
+
+    // Initialize NGramIndex for code search
+    ngramIdx, err := search.NewNGramIndex(cfg.NGramIndexPath, 3)
+    if err != nil {
+        logger.Sugar().Fatalw("failed to open ngram index", "err", err)
+    }
+
     r := gin.New()
     r.Use(internal.GinZap(logger))
     r.Use(gin.Recovery())
     r.Use(internal.RateLimitMiddleware(cfg.RateLimitReqPerMin))
-    api.RegisterRoutes(r, gh)
+    api.RegisterRoutes(r, gh, ngramIdx)
     srv := &http.Server{
         Addr:    fmt.Sprintf(":%d", cfg.Port),
         Handler: r,

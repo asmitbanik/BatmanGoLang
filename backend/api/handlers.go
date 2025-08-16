@@ -18,8 +18,13 @@ type analyzeRequest struct {
     Language string `json:"language"` // optional user hint
 }
 
-func RegisterRoutes(r *gin.Engine, gh *internal.GitHubClient) {
+// NGramIndex should be initialized in main.go and passed here
+var GlobalNGramIndex *search.NGramIndex
+
+func RegisterRoutes(r *gin.Engine, gh *internal.GitHubClient, idx *search.NGramIndex) {
+    GlobalNGramIndex = idx
     r.POST("/analyze", makeAnalyzeHandler(gh, zap.NewExample()))
+    r.GET("/search", gin.WrapF(search.SearchAPIHandler(idx)))
 }
 
 func makeAnalyzeHandler(gh *internal.GitHubClient, logger *zap.Logger) gin.HandlerFunc {

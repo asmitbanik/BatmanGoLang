@@ -1,3 +1,112 @@
+// Indexer defines methods for indexing files
+type Indexer interface {
+	IndexFile(meta FileMeta, content []byte) error
+	RemoveFile(path string) error
+	ReindexAll() error
+}
+
+// SearchFilters for advanced search
+type SearchFilters struct {
+	Repo     string
+	Language string
+	Path     string
+}
+
+// Searcher defines methods for searching the index
+type Searcher interface {
+	Search(query string, filters SearchFilters, limit, offset int) ([]SearchMatch, int, error)
+}
+
+// Ensure NGramIndex implements Indexer and Searcher
+var _ Indexer = (*NGramIndex)(nil)
+var _ Searcher = (*NGramIndex)(nil)
+
+// RemoveFile removes a file from the index (stub for now)
+func (idx *NGramIndex) RemoveFile(path string) error {
+	// TODO: implement removal logic
+	return nil
+}
+
+// ReindexAll reindexes all files (stub for now)
+func (idx *NGramIndex) ReindexAll() error {
+	// TODO: implement full reindex
+	return nil
+}
+
+// Search with filters, pagination, and ranking
+func (idx *NGramIndex) Search(query string, filters SearchFilters, limit, offset int) ([]SearchMatch, int, error) {
+	candidates, err := idx.SearchNGram(query)
+	if err != nil {
+		return nil, 0, err
+	}
+	var results []SearchMatch
+	for _, meta := range candidates {
+		// Filtering
+		if filters.Repo != "" && meta.Repo != filters.Repo {
+			continue
+		}
+		if filters.Language != "" && meta.Language != filters.Language {
+			continue
+		}
+		if filters.Path != "" && !strings.Contains(meta.Path, filters.Path) {
+			continue
+		}
+		absPath := meta.Path
+		if !filepath.IsAbs(absPath) {
+			absPath, _ = filepath.Abs(absPath)
+		}
+		f, err := os.Open(absPath)
+		if err != nil {
+			continue
+		}
+		scanner := bufio.NewScanner(f)
+		lineNum := 0
+		for scanner.Scan() {
+			line := scanner.Text()
+			lineNum++
+			var matchRanges [][2]int
+			hay := line
+			needle := query
+			hay = strings.ToLower(line)
+			needle = strings.ToLower(query)
+			idxPos := 0
+			for {
+				i := strings.Index(hay[idxPos:], needle)
+				if i == -1 {
+					break
+				}
+				matchRanges = append(matchRanges, [2]int{idxPos + i, idxPos + i + len(needle)})
+				idxPos += i + len(needle)
+			}
+			if len(matchRanges) > 0 {
+				results = append(results, SearchMatch{
+					Repo: meta.Repo,
+					Path: meta.Path,
+					Language: meta.Language,
+					Line: line,
+					LineNumber: lineNum,
+					MatchRanges: matchRanges,
+				})
+			}
+		}
+		f.Close()
+	}
+	// Ranking: sort by number of matches per file (descending)
+	sort.Slice(results, func(i, j int) bool {
+		return len(results[i].MatchRanges) > len(results[j].MatchRanges)
+	})
+	total := len(results)
+	// Pagination
+	start := offset
+	if start > total {
+		start = total
+	}
+	end := start + limit
+	if end > total {
+		end = total
+	}
+	return results[start:end], total, nil
+}
 package search
 
 import (
